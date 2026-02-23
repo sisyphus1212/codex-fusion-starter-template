@@ -1,11 +1,11 @@
 # Codex 融合模板缺漏检查报告
 
-- 检查时间(UTC): 2026-02-23 05:05:33Z
+- 检查时间(UTC): 2026-02-23 07:44:51Z
 - 模板根目录: codex-fusion-starter-template/scaffold
 - 对比清单: codex-fusion-starter-template/source_paths.txt
 
 ## 1) 抽取结构完整性
-- 结果: 无缺失（105/105 文件齐全）。
+- 结果: 无缺失（109/109 文件齐全）。
 
 ## 2) 推荐补齐项（可运行增强）
 - 结果: 发现 15 个推荐缺项。

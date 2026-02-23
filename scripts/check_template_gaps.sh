@@ -48,8 +48,15 @@ done
 
 checks=()
 
-# Check AGENTS conflict handling files exist.
-for f in "AGENTS.md" "AGENTS.openai-agents-python.md" "AGENTS.openai-codex.md"; do
+# Check AGENTS conflict handling and hierarchical examples.
+for f in \
+  "AGENTS.md" \
+  "AGENTS.openai-agents-python.md" \
+  "AGENTS.openai-codex.md" \
+  "src/agents/AGENTS.md" \
+  "codex-rs/AGENTS.md" \
+  "codex-cli/AGENTS.md"
+do
   if [ ! -f "${SCAFFOLD_DIR}/${f}" ]; then
     checks+=("missing ${f}")
   fi
@@ -76,6 +83,13 @@ for f in \
   "src/agents/extensions/experimental/codex/codex_tool.py" \
   "tests/extensions/experiemental/codex/test_codex_tool.py"
 do
+  if [ ! -f "${SCAFFOLD_DIR}/${f}" ]; then
+    checks+=("missing ${f}")
+  fi
+done
+
+# Check release helper scripts required by workflows.
+for f in ".github/scripts/select-release-milestone.py"; do
   if [ ! -f "${SCAFFOLD_DIR}/${f}" ]; then
     checks+=("missing ${f}")
   fi

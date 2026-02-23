@@ -63,6 +63,23 @@ jobs:
           git fetch origin main "$RELEASE_BRANCH"
           git checkout -B "$RELEASE_BRANCH" "origin/$RELEASE_BRANCH"
           git rebase origin/main
+      - name: Install git-cliff
+        if: steps.find.outputs.found == 'true'
+        uses: taiki-e/install-action@v2
+        with:
+          tool: git-cliff
+      - name: Regenerate changelog
+        if: steps.find.outputs.found == 'true'
+        env:
+          RELEASE_BRANCH: ${{ steps.find.outputs.branch }}
+        run: |
+          set -euo pipefail
+          version="${RELEASE_BRANCH#release/v}"
+          git cliff --config cliff.toml --tag "v${version}" --output CHANGELOG.md
+          if ! git diff --quiet -- CHANGELOG.md; then
+            git add CHANGELOG.md
+            git commit -m "Update changelog for ${version}"
+          fi
       - name: Prepare Codex output
         if: steps.find.outputs.found == 'true'
         id: codex-output

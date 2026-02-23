@@ -30,6 +30,7 @@
 .github/codex/labels/codex-triage.md
 .github/codex/prompts/pr-labels.md
 .github/codex/prompts/release-review.md
+.github/scripts/select-release-milestone.py
 .github/workflows/issue-deduplicator.yml
 .github/workflows/issue-labeler.yml
 .github/workflows/pr-labels.yml
@@ -45,9 +46,11 @@ README.md
 announcement_tip.toml
 cliff.toml
 codex-cli/package.json
+codex-cli/AGENTS.md
 codex-rs/.cargo/config.toml
 codex-rs/.config/nextest.toml
 codex-rs/Cargo.toml
+codex-rs/AGENTS.md
 codex-rs/core/config.schema.json
 codex-rs/core/src/config/schema.md
 codex-rs/execpolicy/examples/example.codexpolicy
@@ -76,6 +79,7 @@ mkdocs.yml
 package.json
 pnpm-workspace.yaml
 src/agents/agent.py
+src/agents/AGENTS.md
 src/agents/extensions/experimental/__init__.py
 src/agents/extensions/experimental/codex/__init__.py
 src/agents/extensions/experimental/codex/codex.py

@@ -21,7 +21,7 @@
 
 ```bash
 mkdir -p /path/to/your-project
-cp -R /root/openai-agents-python/codex-fusion-starter-template/scaffold/. /path/to/your-project/
+cp -R /path/to/codex-fusion-starter-template/scaffold/. /path/to/your-project/
 ```
 
 ### 2.2 初始化仓库
@@ -37,8 +37,8 @@ git checkout -b feat/bootstrap-codex-fusion
 在模板源仓库中可先查看参考报告：
 
 ```bash
-bash /root/openai-agents-python/codex-fusion-starter-template/scripts/check_template_gaps.sh
-cat /root/openai-agents-python/codex-fusion-starter-template/gap-report.md
+bash /path/to/codex-fusion-starter-template/scripts/check_template_gaps.sh
+cat /path/to/codex-fusion-starter-template/gap-report.md
 ```
 
 在你的目标仓库中建议复刻同类检查脚本，并按结果补齐依赖。
@@ -161,23 +161,53 @@ codex --version
 
 ## 8. AGENTS 使用规则
 
-融合模板里的 AGENTS 文件有三份：
+融合模板里的 AGENTS 文件有三类：
 
 - `scaffold/AGENTS.md`：融合入口（先读这个）。
-- `scaffold/AGENTS.openai-agents-python.md`：Python 侧规范。
-- `scaffold/AGENTS.openai-codex.md`：Rust/Codex CLI 侧规范。
+- `scaffold/AGENTS.openai-agents-python.md`：Python 侧规范参考。
+- `scaffold/AGENTS.openai-codex.md`：Rust/Codex CLI 侧规范参考。
+- `scaffold/<subdir>/AGENTS.md`：子目录覆盖规则（示例已提供）。
 
 执行原则：
 
-1. 改哪个子模块就优先用对应 AGENTS。
-2. 同时跨模块改动时，两份都遵守。
-3. 规则冲突时，从严处理并以 CI 必需项优先。
+1. 先应用根目录 `AGENTS.md`。
+2. 再应用命中路径最近的子目录 `AGENTS.md`。
+3. 同时跨模块改动时，按触及目录分别套用对应规则。
+4. 规则冲突时，从严处理并以 CI 必需项优先。
+
+### 8.1 分层示例（已内置）
+
+- `scaffold/src/agents/AGENTS.md`：Python Agents SDK 子树规则。
+- `scaffold/codex-rs/AGENTS.md`：Rust 子树规则。
+- `scaffold/codex-cli/AGENTS.md`：CLI 子树规则。
+
+迁移到新项目时，建议保留这个结构，按子目录 owner 维护各自规则。
 
 ## 9. CI 与密钥配置
 
 如果启用 Codex Action 工作流，需要在仓库 Secrets 配置 API Key（名称以 workflow 为准）：
 
 - 常见：`CODEX_OPENAI_API_KEY` 或 `PROD_OPENAI_API_KEY`。
+
+### 9.1 Workflow 可配置变量（去硬编码）
+
+为了避免模板里写死仓库名和触发标签，建议在 GitHub 仓库 Variables 中配置：
+
+- `CODEX_WORKFLOW_TARGET_REPOSITORY`
+  - 用途：限制 workflow 只在指定仓库运行。
+  - 示例：`your-org/your-repo`
+  - 默认：当前仓库（未设置时等价于 `${{ github.repository }}`）。
+- `CODEX_ISSUE_LABELER_TRIGGER_LABEL`
+  - 用途：`issue-labeler.yml` 的手动触发标签。
+  - 默认：`codex-label`
+- `CODEX_ISSUE_DEDUP_TRIGGER_LABEL`
+  - 用途：`issue-deduplicator.yml` 的手动触发标签。
+  - 默认：`codex-deduplicate`
+
+对应文件：
+
+- `scaffold/.github/workflows/issue-labeler.yml`
+- `scaffold/.github/workflows/issue-deduplicator.yml`
 
 建议先在测试仓库验证：
 

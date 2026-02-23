@@ -9,8 +9,18 @@ on:
 jobs:
   gather-duplicates:
     name: Identify potential duplicates
-    # Prevent runs on forks (requires OpenAI API key, wastes Actions minutes)
-    if: github.repository == 'openai/codex' && (github.event.action == 'opened' || (github.event.action == 'labeled' && github.event.label.name == 'codex-deduplicate'))
+    # Restrict execution scope via repository variables while keeping safe defaults.
+    if: >-
+      ${{
+        github.repository == ((vars.CODEX_WORKFLOW_TARGET_REPOSITORY != '' && vars.CODEX_WORKFLOW_TARGET_REPOSITORY) || github.repository)
+        && (
+          github.event.action == 'opened'
+          || (
+            github.event.action == 'labeled'
+            && github.event.label.name == ((vars.CODEX_ISSUE_DEDUP_TRIGGER_LABEL != '' && vars.CODEX_ISSUE_DEDUP_TRIGGER_LABEL) || 'codex-deduplicate')
+          )
+        )
+      }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -77,10 +87,12 @@ jobs:
       # .github/prompts/issue-deduplicator.txt file is obsolete and removed.
       - id: codex-all
         name: Find duplicates (pass 1, all issues)
-        uses: openai/codex-action@main
+        uses: openai/codex-action@086169432f1d2ab2f4057540b1754d550f6a1189
         with:
           openai-api-key: ${{ secrets.CODEX_OPENAI_API_KEY }}
           allow-users: "*"
+          safety-strategy: drop-sudo
+          sandbox: read-only
           prompt: |
             You are an assistant that triages new GitHub issues by identifying potential duplicates.
 
@@ -161,10 +173,12 @@ jobs:
       - id: codex-open
         name: Find duplicates (pass 2, open issues)
         if: ${{ steps.normalize-all.outputs.has_matches != 'true' }}
-        uses: openai/codex-action@main
+        uses: openai/codex-action@086169432f1d2ab2f4057540b1754d550f6a1189
         with:
           openai-api-key: ${{ secrets.CODEX_OPENAI_API_KEY }}
           allow-users: "*"
+          safety-strategy: drop-sudo
+          sandbox: read-only
           prompt: |
             You are an assistant that triages new GitHub issues by identifying potential duplicates.
 
@@ -346,11 +360,17 @@ jobs:
               body: lines.join("\n"),
             });
 
-      - name: Remove codex-deduplicate label
-        if: ${{ always() && github.event.action == 'labeled' && github.event.label.name == 'codex-deduplicate' }}
+      - name: Remove trigger label
+        if: >-
+          ${{
+            always()
+            && github.event.action == 'labeled'
+            && github.event.label.name == ((vars.CODEX_ISSUE_DEDUP_TRIGGER_LABEL != '' && vars.CODEX_ISSUE_DEDUP_TRIGGER_LABEL) || 'codex-deduplicate')
+          }}
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          TRIGGER_LABEL: ${{ (vars.CODEX_ISSUE_DEDUP_TRIGGER_LABEL != '' && vars.CODEX_ISSUE_DEDUP_TRIGGER_LABEL) || 'codex-deduplicate' }}
         run: |
-          gh issue edit "${{ github.event.issue.number }}" --remove-label codex-deduplicate || true
-          echo "Attempted to remove label: codex-deduplicate"
+          gh issue edit "${{ github.event.issue.number }}" --remove-label "$TRIGGER_LABEL" || true
+          echo "Attempted to remove label: $TRIGGER_LABEL"

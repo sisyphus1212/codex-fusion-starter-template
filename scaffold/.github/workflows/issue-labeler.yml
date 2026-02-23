@@ -9,8 +9,18 @@ on:
 jobs:
   gather-labels:
     name: Generate label suggestions
-    # Prevent runs on forks (requires OpenAI API key, wastes Actions minutes)
-    if: github.repository == 'openai/codex' && (github.event.action == 'opened' || (github.event.action == 'labeled' && github.event.label.name == 'codex-label'))
+    # Restrict execution scope via repository variables while keeping safe defaults.
+    if: >-
+      ${{
+        github.repository == ((vars.CODEX_WORKFLOW_TARGET_REPOSITORY != '' && vars.CODEX_WORKFLOW_TARGET_REPOSITORY) || github.repository)
+        && (
+          github.event.action == 'opened'
+          || (
+            github.event.action == 'labeled'
+            && github.event.label.name == ((vars.CODEX_ISSUE_LABELER_TRIGGER_LABEL != '' && vars.CODEX_ISSUE_LABELER_TRIGGER_LABEL) || 'codex-label')
+          )
+        )
+      }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -20,10 +30,12 @@ jobs:
       - uses: actions/checkout@v6
 
       - id: codex
-        uses: openai/codex-action@main
+        uses: openai/codex-action@086169432f1d2ab2f4057540b1754d550f6a1189
         with:
           openai-api-key: ${{ secrets.CODEX_OPENAI_API_KEY }}
           allow-users: "*"
+          safety-strategy: drop-sudo
+          sandbox: read-only
           prompt: |
             You are an assistant that reviews GitHub issues for the repository.
 
@@ -126,8 +138,15 @@ jobs:
 
           "${cmd[@]}" || true
 
-      - name: Remove codex-label trigger
-        if: ${{ always() && github.event.action == 'labeled' && github.event.label.name == 'codex-label' }}
+      - name: Remove trigger label
+        if: >-
+          ${{
+            always()
+            && github.event.action == 'labeled'
+            && github.event.label.name == ((vars.CODEX_ISSUE_LABELER_TRIGGER_LABEL != '' && vars.CODEX_ISSUE_LABELER_TRIGGER_LABEL) || 'codex-label')
+          }}
+        env:
+          TRIGGER_LABEL: ${{ (vars.CODEX_ISSUE_LABELER_TRIGGER_LABEL != '' && vars.CODEX_ISSUE_LABELER_TRIGGER_LABEL) || 'codex-label' }}
         run: |
-          gh issue edit "$ISSUE_NUMBER" --remove-label codex-label || true
-          echo "Attempted to remove label: codex-label"
+          gh issue edit "$ISSUE_NUMBER" --remove-label "$TRIGGER_LABEL" || true
+          echo "Attempted to remove label: $TRIGGER_LABEL"

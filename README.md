@@ -13,6 +13,7 @@
 - `scaffold/`：融合后的工程骨架。
 - `scaffold/governance/`：可复用工程治理抽象层（Core/Profile/Adapter/State）。
 - `USAGE.md`：完整使用说明（落地步骤、裁剪策略、CI 配置）。
+- `feature-matrix.md`：可持续迭代功能列表（条目式）。
 - `compare-report.md`：两模板优缺点对比 + 融合策略。
 - `manifest.json`：融合模板元数据。
 - `gap-report.md`：缺漏检查结果。
@@ -34,10 +35,15 @@ bash codex-fusion-starter-template/scripts/check_template_gaps.sh
 - Project Profile：`governance/PROJECT_PROFILE.yaml` 参数化项目约束。
 - Domain Adapter：`governance/scripts/*.commands` 放项目命令，不改治理框架。
 
-## AGENTS 冲突处理
+## AGENTS 分层与冲突处理
 
 两来源都含 `AGENTS.md`。融合模板已处理为：
 
 - `scaffold/AGENTS.md`：融合入口说明。
 - `scaffold/AGENTS.openai-agents-python.md`：来源 A 原文。
 - `scaffold/AGENTS.openai-codex.md`：来源 B 原文。
+- `scaffold/src/agents/AGENTS.md`：Python 子目录示例规则。
+- `scaffold/codex-rs/AGENTS.md`：Rust 子目录示例规则。
+- `scaffold/codex-cli/AGENTS.md`：CLI 子目录示例规则。
+
+建议使用“根目录 + 子目录”分层规则，按路径命中最近的 `AGENTS.md` 覆盖局部约束。

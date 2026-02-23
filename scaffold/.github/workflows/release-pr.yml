@@ -24,6 +24,10 @@ jobs:
         uses: astral-sh/setup-uv@803947b9bd8e9f986429fa0c5a41c367cd732b41
         with:
           enable-cache: true
+      - name: Install git-cliff
+        uses: taiki-e/install-action@v2
+        with:
+          tool: git-cliff
       - name: Fetch tags
         run: git fetch origin --tags --prune
       - name: Ensure release branch does not exist
@@ -59,6 +63,9 @@ jobs:
               )
               sys.exit(1)
           path = pathlib.Path("pyproject.toml")
+          if not path.exists():
+              print("pyproject.toml not found; skipping version bump.")
+              sys.exit(0)
           text = path.read_text()
           updated, count = re.subn(
               r'(?m)^version\s*=\s*"[^\"]+"',
@@ -69,12 +76,19 @@ jobs:
               print("Expected to update exactly one version line.", file=sys.stderr)
               sys.exit(1)
           if updated == text:
-              print("Version already set; no changes made.", file=sys.stderr)
-              sys.exit(1)
+              print("Version already set; no changes made.")
+              sys.exit(0)
           path.write_text(updated)
           PY
       - name: Sync dependencies
+        if: ${{ hashFiles('pyproject.toml') != '' && hashFiles('Makefile') != '' }}
         run: make sync
+      - name: Generate changelog
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          git cliff --config cliff.toml --tag "v${RELEASE_VERSION}" --output CHANGELOG.md
       - name: Configure git
         run: |
           git config user.name "github-actions[bot]"
@@ -83,14 +97,17 @@ jobs:
         env:
           RELEASE_VERSION: ${{ inputs.version }}
         run: |
+          set -euo pipefail
           branch="release/v${RELEASE_VERSION}"
           git checkout -b "$branch"
-          git add pyproject.toml uv.lock
+          git add CHANGELOG.md
+          [ -f pyproject.toml ] && git add pyproject.toml || true
+          [ -f uv.lock ] && git add uv.lock || true
           if git diff --cached --quiet; then
             echo "No changes to commit." >&2
             exit 1
           fi
-          git commit -m "Bump version to ${RELEASE_VERSION}"
+          git commit -m "Prepare release ${RELEASE_VERSION}"
           git push --set-upstream origin "$branch"
       - name: Prepare Codex output
         id: codex-output
