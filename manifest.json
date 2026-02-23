@@ -1,0 +1,23 @@
+{
+  "template_name": "codex-fusion-starter-template",
+  "generated_on_utc": "2026-02-22",
+  "sources": [
+    {
+      "name": "codex-template",
+      "origin": "openai-agents-python derived",
+      "file_count": 54
+    },
+    {
+      "name": "codex-openai-codex-starter-template",
+      "origin": "https://github.com/openai/codex",
+      "file_count": 37,
+      "source_commit": "0a0caa9df266ebc124d524ee6ad23ee6513fe501"
+    }
+  ],
+  "union_file_count": 92,
+  "intersection_file_count": 1,
+  "intersection_files": [
+    "AGENTS.md"
+  ],
+  "template_root": "codex-fusion-starter-template/scaffold"
+}
