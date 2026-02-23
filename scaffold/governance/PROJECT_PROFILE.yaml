@@ -1,0 +1,58 @@
+project:
+  name: "your-project-name"
+  domain: "python|cpp|rust|mixed"
+  owner: "team-or-person"
+
+paths:
+  writable_roots:
+    - "<absolute/path/to/project>"
+  read_roots:
+    - "/"
+  out_of_scope_write_requires_approval: true
+
+workflow:
+  phases:
+    - id: P0
+      name: "Recover Baseline"
+      exit_criteria:
+        - "Baseline scripts run successfully."
+    - id: P1
+      name: "Classify Root Cause"
+      exit_criteria:
+        - "Issue category is identified with evidence."
+    - id: P2
+      name: "Minimal Fix"
+      exit_criteria:
+        - "Small and isolated diff addresses the active root cause."
+    - id: P3
+      name: "Regression and Knowledge Capture"
+      exit_criteria:
+        - "Minimal regression passes and evidence is archived."
+
+triage:
+  taxonomy:
+    - "Build"
+    - "Runtime"
+    - "Interface/MMIO/API"
+    - "IRQ/Event/Async"
+    - "Network/IO"
+    - "Test/CI"
+    - "Other"
+
+verification:
+  baseline_command: "./governance/scripts/run_baseline.sh"
+  min_regression_command: "./governance/scripts/run_min_regression.sh"
+  must_run_after_each_change: true
+
+evidence:
+  root_dir: "evidence"
+  logs_dir: "evidence/logs"
+  checkpoints_dir: "evidence/checkpoints"
+  required_artifacts:
+    - "summary.txt"
+    - "step logs"
+    - "key command outputs"
+    - "classification note"
+
+reporting:
+  format_template: "governance/templates/STATUS_REPORT.md"

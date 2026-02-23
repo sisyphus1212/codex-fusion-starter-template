@@ -1,0 +1,5 @@
+# Baseline commands example
+# Replace these with project-specific commands.
+
+echo "build command here"
+echo "smoke boot command here"
